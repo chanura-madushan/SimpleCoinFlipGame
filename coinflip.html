@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coin Flip</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="coinflip.css" />
+</head>
+<body>
+
+  <div class="noise"></div>
+
+  <div class="wrapper">
+
+    <header>
+      <span class="label">COIN FLIP</span>
+      <h1>CALL IT.</h1>
+    </header>
+
+    <!-- Score Bar -->
+    <div class="scorebar">
+      <div class="score-block">
+        <span class="score-num" id="heads-count">0</span>
+        <span class="score-label">HEADS</span>
+      </div>
+      <div class="score-divider">—</div>
+      <div class="score-block">
+        <span class="score-num" id="tails-count">0</span>
+        <span class="score-label">TAILS</span>
+      </div>
+    </div>
+
+    <!-- Coin -->
+    <div class="coin-stage">
+      <div class="coin-scene">
+        <div class="coin" id="coin">
+          <div class="coin-face coin-heads">
+            <span>H</span>
+          </div>
+          <div class="coin-face coin-tails">
+            <span>T</span>
+          </div>
+        </div>
+      </div>
+      <div class="coin-shadow"></div>
+    </div>
+
+    <!-- Result -->
+    <div class="result-wrap">
+      <p class="result-text" id="result-text">—</p>
+      <p class="streak-text" id="streak-text"></p>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-row">
+      <button class="btn btn-heads" id="btn-heads" onclick="flipCoin('heads')">
+        <span class="btn-icon">H</span>
+        HEADS
+      </button>
+      <button class="btn btn-tails" id="btn-tails" onclick="flipCoin('tails')">
+        <span class="btn-icon">T</span>
+        TAILS
+      </button>
+    </div>
+
+    <!-- Flip any / reset -->
+    <div class="sub-row">
+      <button class="btn-ghost" onclick="flipCoin(null)">FLIP RANDOM</button>
+      <button class="btn-ghost btn-reset" onclick="resetGame()">RESET</button>
+    </div>
+
+    <!-- History -->
+    <div class="history-wrap">
+      <p class="history-label">HISTORY</p>
+      <div class="history-dots" id="history-dots"></div>
+    </div>
+
+  </div>
+
+  <script>
+    let headsCount = 0;
+    let tailsCount = 0;
+    let streak = 0;
+    let lastResult = null;
+    let history = [];
+    let flipping = false;
+
+    function flipCoin(choice) {
+      if (flipping) return;
+      flipping = true;
+
+      const coin = document.getElementById('coin');
+      const resultText = document.getElementById('result-text');
+      const streakText = document.getElementById('streak-text');
+      const btnH = document.getElementById('btn-heads');
+      const btnT = document.getElementById('btn-tails');
+
+      btnH.disabled = true;
+      btnT.disabled = true;
+      resultText.textContent = '—';
+      streakText.textContent = '';
+
+      // Determine outcome
+      const outcome = Math.random() < 0.5 ? 'heads' : 'tails';
+
+      // Remove old classes
+      coin.classList.remove('flip-heads', 'flip-tails', 'land-heads', 'land-tails');
+
+      // Force reflow
+      void coin.offsetWidth;
+
+      // Spin animation
+      coin.classList.add(outcome === 'heads' ? 'flip-heads' : 'flip-tails');
+
+      setTimeout(() => {
+        // Update counts
+        if (outcome === 'heads') headsCount++;
+        else tailsCount++;
+
+        document.getElementById('heads-count').textContent = headsCount;
+        document.getElementById('tails-count').textContent = tailsCount;
+
+        // Streak
+        if (outcome === lastResult) {
+          streak++;
+        } else {
+          streak = 1;
+        }
+        lastResult = outcome;
+
+        // Result text
+        const won = choice === null || choice === outcome;
+        resultText.textContent = outcome.toUpperCase();
+        resultText.className = 'result-text ' + (outcome === 'heads' ? 'result-heads' : 'result-tails');
+
+        if (choice !== null) {
+          resultText.textContent += won ? ' — YOU WIN!' : ' — YOU LOSE!';
+        }
+
+        if (streak >= 3) {
+          streakText.textContent = `🔥 ${streak}× ${outcome.toUpperCase()} STREAK`;
+        }
+
+        // History dot
+        history.unshift(outcome);
+        if (history.length > 30) history.pop();
+        renderHistory();
+
+        // Land pose
+        coin.classList.remove('flip-heads', 'flip-tails');
+        coin.classList.add(outcome === 'heads' ? 'land-heads' : 'land-tails');
+
+        btnH.disabled = false;
+        btnT.disabled = false;
+        flipping = false;
+      }, 900);
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('history-dots');
+      container.innerHTML = history.map(r =>
+        `<span class="dot dot-${r}" title="${r}"></span>`
+      ).join('');
+    }
+
+    function resetGame() {
+      if (flipping) return;
+      headsCount = 0;
+      tailsCount = 0;
+      streak = 0;
+      lastResult = null;
+      history = [];
+      document.getElementById('heads-count').textContent = '0';
+      document.getElementById('tails-count').textContent = '0';
+      document.getElementById('result-text').textContent = '—';
+      document.getElementById('result-text').className = 'result-text';
+      document.getElementById('streak-text').textContent = '';
+      document.getElementById('history-dots').innerHTML = '';
+
+      const coin = document.getElementById('coin');
+      coin.classList.remove('flip-heads', 'flip-tails', 'land-heads', 'land-tails');
+    }
+  </script>
+</body>
+</html>
